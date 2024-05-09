@@ -1,9 +1,7 @@
 import torch
 import torch.nn as nn
-import torch.optim as optim
-from torch.utils.data import DataLoader
 import torch.nn.init as init
-from DataProcess import load_data, data_resample, make_ylabel
+from DataProcess import load_data,  make_ylabel
 from sklearn.model_selection import KFold
 from sklearn.metrics import precision_score, recall_score, hamming_loss
 import numpy as np
@@ -11,6 +9,8 @@ import os
 from torchviz import make_dot
 import tkinter as tk
 from tkinter import filedialog
+from tkinter import ttk
+
 
 
 class MultiLabelCNN(nn.Module):
@@ -100,7 +100,7 @@ def browse_model(entry):
     entry.insert(0, file_path)
 
 
-def predict_threshold(model, inputs, targets, threshold=0.5):
+def predict_threshold(model, inputs, threshold=0.5):
     model.eval()
     inputs = inputs
     with torch.no_grad():
@@ -110,18 +110,53 @@ def predict_threshold(model, inputs, targets, threshold=0.5):
     return binary_preds
 
 
-def display_results(results):
+def map_labels(vector):
+    labels = ["A", "C", "M", "S"]
+    mapped_labels = [labels[i] for i, val in enumerate(vector) if val == 1]
+    return ",".join(mapped_labels)
+
+
+def display_results(results, targets):
     # 创建新窗口来展示结果
     result_window = tk.Toplevel(root)
     result_window.title("Prediction Results")
 
-    # 创建 Text 组件来显示结果
-    result_text = tk.Text(result_window, width=50, height=20)
-    result_text.grid(row=0, column=0, padx=10, pady=10)
+    # 创建 Treeview 组件
+    tree = ttk.Treeview(result_window)
+    tree["columns"] = ("results", "targets")
 
-    # 将结果添加到 Text 组件中
-    for idx, sample_result in enumerate(results):
-        result_text.insert(tk.END, f"Sample {idx + 1}: {sample_result}\n")
+    # 设置列名
+    tree.heading("#0", text="Sample")
+    tree.heading("results", text="Results")
+    tree.heading("targets", text="Targets")
+
+    # 添加滑动滚轮
+    scroll = ttk.Scrollbar(result_window, orient="vertical", command=tree.yview)
+    tree.configure(yscrollcommand=scroll.set)
+
+    # 将结果添加到 Treeview 中
+    for idx, (sample_result, target) in enumerate(zip(results, targets)):
+        mapped_result = map_labels(sample_result)
+        mapped_target = map_labels(target)
+        tree.insert("", idx, text=f"Sample {idx + 1}", values=(mapped_result, mapped_target))
+
+    # 添加图表说明
+    label_info = tk.Label(result_window, text="A:acetyllysine(乙酰化) ,C:crotonyllysine(巴豆酰化) ,M:methyllysine(甲基化) ,S:succinyllysine(琥珀酰化) ")
+    label_info.grid(row=1, column=0, columnspan=2)
+
+    # 将 Treeview 和滑动滚轮添加到窗口中，并设置自适应大小
+    tree.grid(row=0, column=0, sticky="nsew")
+    scroll.grid(row=0, column=1, sticky="ns")
+    result_window.grid_rowconfigure(0, weight=1)
+    result_window.grid_columnconfigure(0, weight=1)
+
+    # 设置每行内容居中显示
+    for col in tree["columns"]:
+        tree.heading(col, anchor=tk.CENTER)
+        tree.column(col, anchor=tk.CENTER)
+
+    # 调整窗口大小以适应内容
+    result_window.update()
 
 
 def integrate_and_predict():
@@ -132,8 +167,9 @@ def integrate_and_predict():
     X_test, targets_test = load_data(test_path=test_file_path)
     model = load_model(model_file_path)
     # 使用模型进行预测
-    res=predict_threshold(model=model,inputs=X_test,targets=targets_test)
-    display_results(res)
+    res=predict_threshold(model=model,inputs=X_test)
+    targets_test=make_ylabel(targets_test)
+    display_results(res,targets_test)
 
 
 

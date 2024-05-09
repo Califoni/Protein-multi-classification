@@ -102,7 +102,7 @@ def class_weight_all(Y_train,a):
 
 def data_preprocess(batch_size=128, shuffle=True,sample_strategy=1):
     # 载入数据
-    X_train, X_test, Y_train, Y_test = load_data("mydata/PSTAAP_train.mat", "mydata/PSTAAP_test.mat")
+    X_train, X_test, Y_train, Y_test = load_data("", "mydata/PSTAAP_test.mat")
     X_ori=X_train
     Y_ori=make_ylabel(Y_train)
     X_train, Y_train = data_resample(X_train, Y_train, sample_strategy=sample_strategy)
@@ -357,12 +357,12 @@ if __name__ == '__main__':
     # 检查是否有可用的GPU
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(f"[INFO]\tUsing device: {device}")
-    X_train, targets_train, X_test, targets_test, train_loader,X_ori,Y_ori ,Y_label= data_preprocess(sample_strategy=2)
+    X_train, targets_train, X_test, targets_test, train_loader,X_ori,Y_ori ,Y_label= data_preprocess(sample_strategy=1)
 
     # 进行5折交叉验证
-    lr=0.001;num_epoch=100;weight_decay=0.000001
-    train_in_k_fold(X_train=X_train, Y_train=targets_train, lr=lr, weight_decay=weight_decay,
-                    num_epochs=num_epoch,X_ori=X_ori,Y_ori=Y_ori,Y_label=Y_label,class_weights=class_weight_all(Y_label,1))
+    # lr=0.001;num_epoch=100;weight_decay=0.000001
+    # train_in_k_fold(X_train=X_train, Y_train=targets_train, lr=lr, weight_decay=weight_decay,
+    #                 num_epochs=num_epoch,X_ori=X_ori,Y_ori=Y_ori,Y_label=Y_label,class_weights=class_weight_all(Y_label,1))
 
     # 使用全部数据进行训练，在测试集上测试
     model=MultiLabelCNN().to(device)
@@ -370,7 +370,7 @@ if __name__ == '__main__':
     optimizer = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999), eps=1e-8, weight_decay=weight_decay)
     train_for_test(model=model, train_loader=train_loader, X_train=X_train, targets_train=targets_train,
                    optimizer=optimizer, num_epoch=num_epoch, is_train=False)
-    torch.onnx.export(model, X_train, "MultiLabelCNN.onnx")
+    # torch.onnx.export(model, X_train, "MultiLabelCNN.onnx")
 
     file_list=os.listdir('./ckpt')
     adam_files = [file_name for file_name in file_list if file_name.startswith('Adam')]
