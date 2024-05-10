@@ -15,3 +15,6 @@
 #### 2.2 自定义数据进行预测
 * 首先将数据转化成`Data/Test dataset`中数据的格式，然后使用matlab修改`Data/PSTAAP_test.m`脚本中的文件路径为你自己的文件路径后运行，获得特征提取后的mat文件
 * 运行predictor.py，其余步骤同2.1，数据选择你自己的
+### 3.预测结果展示
+![img.png](img.png)
+* 如图所示，Results表示样本所预测出的标签，Targets表示样本本身具有的真实标签
