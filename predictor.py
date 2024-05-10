@@ -116,29 +116,45 @@ def map_labels(vector):
     return ",".join(mapped_labels)
 
 
-def display_results(results, targets):
+def display_results(results, targets=None):
     # 创建新窗口来展示结果
     result_window = tk.Toplevel(root)
     result_window.title("Prediction Results")
 
     # 创建 Treeview 组件
     tree = ttk.Treeview(result_window)
-    tree["columns"] = ("results", "targets")
+    if targets!=None:
+        tree["columns"] = ("results", "targets")
 
-    # 设置列名
-    tree.heading("#0", text="Sample")
-    tree.heading("results", text="Results")
-    tree.heading("targets", text="Targets")
+        # 设置列名
+        tree.heading("#0", text="Sample")
+        tree.heading("results", text="Results")
+        tree.heading("targets", text="Targets")
 
-    # 添加滑动滚轮
-    scroll = ttk.Scrollbar(result_window, orient="vertical", command=tree.yview)
-    tree.configure(yscrollcommand=scroll.set)
+        # 添加滑动滚轮
+        scroll = ttk.Scrollbar(result_window, orient="vertical", command=tree.yview)
+        tree.configure(yscrollcommand=scroll.set)
 
-    # 将结果添加到 Treeview 中
-    for idx, (sample_result, target) in enumerate(zip(results, targets)):
-        mapped_result = map_labels(sample_result)
-        mapped_target = map_labels(target)
-        tree.insert("", idx, text=f"Sample {idx + 1}", values=(mapped_result, mapped_target))
+        # 将结果添加到 Treeview 中
+        for idx, (sample_result, target) in enumerate(zip(results, targets)):
+            mapped_result = map_labels(sample_result)
+            mapped_target = map_labels(target)
+            tree.insert("", idx, text=f"Sample {idx + 1}", values=(mapped_result, mapped_target))
+    else:
+        tree["columns"] = ("results")
+
+        # 设置列名
+        tree.heading("#0", text="Sample")
+        tree.heading("results", text="Results")
+
+        # 添加滑动滚轮
+        scroll = ttk.Scrollbar(result_window, orient="vertical", command=tree.yview)
+        tree.configure(yscrollcommand=scroll.set)
+
+        # 将结果添加到 Treeview 中
+        for idx, (sample_result, target) in enumerate(results):
+            mapped_result = map_labels(sample_result)
+            tree.insert("", idx, text=f"Sample {idx + 1}", values=[mapped_result])
 
     # 添加图表说明
     label_info = tk.Label(result_window, text="A:acetyllysine(乙酰化) ,C:crotonyllysine(巴豆酰化) ,M:methyllysine(甲基化) ,S:succinyllysine(琥珀酰化) ")
@@ -168,7 +184,11 @@ def integrate_and_predict():
     model = load_model(model_file_path)
     # 使用模型进行预测
     res=predict_threshold(model=model,inputs=X_test)
-    targets_test=make_ylabel(targets_test)
+    print(targets_test)
+    if len(targets_test)!=0:
+        targets_test=make_ylabel(targets_test)
+    else:
+        targets_test=None
     display_results(res,targets_test)
 
 

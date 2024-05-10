@@ -54,7 +54,8 @@ def load_data(train_path=None, test_path=None):
     else:
         for i in range(1, 12):
             exec(f'yt_dir.append(np.full(dt_{i}.shape[0],i))')
-    Y_test = np.concatenate((yt_dir), axis=0)
+    if yt_dir:
+        Y_test = np.concatenate((yt_dir), axis=0)
 
     print("[INFO]\tData Load Finished")
     if train_path:
